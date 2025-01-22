@@ -19,6 +19,7 @@ if not "%~1"=="" (
 
 :: Check if Python is installed
 pip --version >nul 2>&1 && (set python_installed=true) || (set python_installed=false)
+if not "%python_installed%"=="true" if exist %ACTIVATE_PATH% (set python_installed=true)
 if not "%python_installed%"=="true" (
     echo Python is required to run this program.
     set /p "userinp=Do you want to install Python (y/n)?: "
