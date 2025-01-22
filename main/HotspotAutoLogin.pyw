@@ -197,6 +197,7 @@ def add_new_profile():
         ssid = ssid_var.get().strip()
         url = url_var.get().strip()
         internet_check_url = internet_check_url_var.get().strip()
+        internet_unreachable_text = internet_unreachable_text_var.get().strip()
         check_every_second = check_every_second_var.get().strip()
         dialog_width = dialog_width_var.get().strip()
         dialog_height = dialog_height_var.get().strip()
@@ -255,6 +256,7 @@ def add_new_profile():
             "name": name,
             "url": url,
             "internet_check_url": internet_check_url,
+            "internet_unreachable_text": internet_unreachable_text,
             "payload": parsed_payload,
             "headers": parsed_headers,
             "check_every_second": int(check_every_second),
@@ -296,6 +298,7 @@ def add_new_profile():
     ssid_var = tk.StringVar(value=connected_ssid)
     url_var = tk.StringVar()
     internet_check_url_var = tk.StringVar(value="8.8.8.8")
+    internet_unreachable_text_var = tk.StringVar(value="")
     check_every_second_var = tk.StringVar(value="600")
     dialog_width_var = tk.StringVar(value="1024")
     dialog_height_var = tk.StringVar(value="500")
@@ -331,6 +334,13 @@ def add_new_profile():
     internet_entry = tk.Entry(internet_frame, textvariable=internet_check_url_var)
     internet_entry.pack(side="left", fill="x", expand=True)
     internet_entry.bind("<Button-3>", show_context_menu)
+    # internet_unreachable_text
+    unreachable_frame = tk.Frame(container)
+    unreachable_frame.pack(fill="x", pady=5)
+    tk.Label(unreachable_frame, text="internet_unreachable_text:").pack(side="left")
+    unreachable_entry = tk.Entry(unreachable_frame, textvariable=internet_unreachable_text_var)
+    unreachable_entry.pack(side="left", fill="x", expand=True)
+    unreachable_entry.bind("<Button-3>", show_context_menu)
     # payload
     tk.Label(container, text="payload:").pack(anchor="w")
     payload_frame = tk.Frame(container)
@@ -418,6 +428,7 @@ def add_new_profile():
     ssid_frame.columnconfigure(1, weight=1)
     url_frame.columnconfigure(1, weight=1)
     internet_frame.columnconfigure(1, weight=1)
+    unreachable_frame.columnconfigure(1, weight=1)
     payload_frame.columnconfigure(0, weight=1)
     headers_frame.columnconfigure(0, weight=1)
     check_frame.columnconfigure(1, weight=1)
@@ -602,6 +613,7 @@ if selected_profile:
     payload = selected_profile.get('payload')
     url = selected_profile.get('url', "")
     internet_check_url = selected_profile.get('internet_check_url', "")
+    internet_unreachable_text = selected_profile.get('internet_unreachable_text', "")
     ssid = selected_profile.get('ssid', "")
     check_every_second = selected_profile.get('check_every_second', "")
     dialog_geometry = selected_profile.get('dialog_geometry', "")
@@ -634,6 +646,9 @@ def is_internet_available():
             try:
                 response = requests.get(url, timeout=5)
                 if response.status_code == 200:
+                    if internet_unreachable_text:
+                        if internet_unreachable_text in response.text:
+                            return False
                     return True
             except requests.RequestException as e:
                 return False
