@@ -10,7 +10,7 @@ import threading
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as messagebox
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 from tkinter import Text, Scrollbar
 from PIL import Image
 from collections import deque
@@ -630,7 +630,14 @@ if selected_profile:
 def send_request():
     session = requests.Session()
     requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
-    response = session.post(url, json.dumps(payload), headers=headers, allow_redirects=True, verify=False, timeout=10)
+    content_type = headers.get('Content-Type', 'application/x-www-form-urlencoded')
+    if content_type == 'application/x-www-form-urlencoded':
+        send_payload = urlencode(payload)
+    elif content_type == 'application/json':
+        send_payload = json.dumps(payload)
+    else:
+        send_payload = payload
+    response = session.post(url, send_payload, headers=headers, allow_redirects=True, verify=False, timeout=10)
     response.raise_for_status()
     return response
 
