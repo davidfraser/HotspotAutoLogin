@@ -599,14 +599,42 @@ run_button.pack(side=tk.LEFT, fill="x", padx=(2, 0), pady=(10, 0), expand=True)
 details_frame.pack_propagate(False)
 # Start with no profile selected
 selected_profile = None
+selected_profile_number = None
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--profile', type=str, default=None, help="Select named or number profile rather than showing dialog")
+parser.add_argument('-a', '--auto-run', action='store_true', default=None, help="Auto run (default if a profile is given)")
+parser.add_argument('-H', '--hide-logs', action='store_true', default=False, help="Hide logs window on startup")
+args = parser.parse_args()
+if args.profile is not None:
+    for n, p in enumerate(profiles):
+        if p.get('name') == args.profile:
+            selected_profile_number = n
+            selected_profile = p
+            args.auto_run = True
+            break
+    else:
+        if args.profile.isdigit():
+            selected_profile_number = int(args.profile)
+            if 0 <= selected_profile_number < len(profiles):
+                selected_profile = profiles[selected_profile_number]
+                args.auto_run = True
+            else:
+                selected_profile_number = None
 
 # Select the first profile by default
 if profiles:
-    selected_profile = profiles[0]
-    listbox.select_set(0)  # Highlight the first item in the list
+    if selected_profile is None:
+        selected_profile_number = 0
+        selected_profile = profiles[0]
+    listbox.select_set(selected_profile_number)  # Highlight the first item in the list
     update_profile_details(None)  # Update the profile details
 
-root.mainloop()
+if args.auto_run:
+    run_profile()
+else:
+    root.mainloop()
 
 # Access the selected profile's data after the window closes
 if selected_profile:
@@ -1035,8 +1063,9 @@ if __name__ == '__main__':
     tray_thread = threading.Thread(target=create_system_tray_icon)
     tray_thread.start()
     # Open Log Messages at startup
-    open_log_messages_startup = threading.Thread(target=show_log_dialog)
-    open_log_messages_startup.start()
+    if not args.hide_logs:
+        open_log_messages_startup = threading.Thread(target=show_log_dialog)
+        open_log_messages_startup.start()
     # Start the network status checking in the main thread
     check_network_status()
     # Wait for all threads to finish
